@@ -1,0 +1,72 @@
+spring:
+
+  redis:
+    host: localhost
+    port: 6379
+
+  application:
+    name: gateway-service
+
+  cloud:
+    gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@ipKeyResolver}"
+            redis-rate-limiter:
+              replenishRate: 10
+              burstCapacity: 20
+              requestedTokens: 1
+        - name: Retry
+          args:
+            retries: 3
+            backoff:
+              firstBackoff: 50ms
+              maxBackoff: 500ms
+
+      routes:
+
+#        user routes
+        - id: user-routes
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user/**
+          filters:
+            - AddResponseHeader=X-genre,Goku
+#        express routes
+        - id: express-routes
+          uri: lb://EXPRESS-SERVICE
+          predicates:
+            - Path=/api/**
+          filters:
+            - AddResponseHeader=x-type,cloud
+
+#         fast api routes
+        - id: fastapi-service-route
+          uri: lb://FASTAPI-SERVICE
+          predicates:
+            - Path=/notifications/**,/chat/**
+          filters:
+            - AddResponseHeader=x-type,cloud
+
+#        post routes
+        - id: post-routes
+          uri: lb://POST-SERVICE
+          predicates: Path=/post/**
+          filters:
+            - AddResponseHeader=x-type,json
+
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+server:
+  port: 8090
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: DEBUG
+
