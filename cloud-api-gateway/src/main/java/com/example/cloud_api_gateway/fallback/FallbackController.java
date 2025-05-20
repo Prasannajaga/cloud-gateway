@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 @RestController
 public class FallbackController {
 
-    @RequestMapping("/fallback/user")
+    @RequestMapping("/fallback/users")
     public Mono<String> userFallback() {
         return Mono.just("User service is temporarily unavailable. Please try again later.");
     }

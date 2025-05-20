@@ -10,6 +10,10 @@ spring:
   cloud:
     gateway:
       default-filters:
+        - name: CircuitBreaker
+          args:
+            name: userServiceCircuitBreaker
+            fallbackUri: forward:/fallback/users
         - name: RequestRateLimiter
           args:
             key-resolver: "#{@ipKeyResolver}"
@@ -70,3 +74,13 @@ logging:
     org.springframework.data.redis: DEBUG
     io.lettuce.core: DEBUG
 
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      userServiceCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
